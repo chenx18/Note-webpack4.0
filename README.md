@@ -48,7 +48,7 @@
   2. 加载 scss ( sass-loader node-sass )   
     - npm install --save-dev sass-loader node-sass 
 
-  3. 加载 less  ( less less-loader ) 
+  3. 加载 less  ( less less-loader )   
     - npm install --save-dev less less-loader
 
   2. 加载图片 ( file-loader   )   
@@ -99,7 +99,8 @@
 
 ## 生产环境构建   
   1. 目录结构   
-    ```js
+
+  ```js
     note-02
       |- node_modules
       |- config
@@ -111,7 +112,8 @@
         |- untils
         |- main.js
       |- package.json
-    ```
+  ```
+
   2. development 开发环境    
     -   
   
