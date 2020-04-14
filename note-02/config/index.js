@@ -12,12 +12,13 @@ module.exports = {
 
   // 入口 （对象 或者 字符）
   entry: {
-    index: path.join(__dirname,'../src/main.js')
+    index: path.join(__dirname,'../src/main.js'),
+    another: path.join(__dirname,'../src/untils/another-module.js'),
   }, 
 
   // 出口
   output:{
-    filename: '[name].js',
+    filename: '[name].[chunkhash].js',
     path: path.join(__dirname,'../dist')
   },
 
@@ -40,15 +41,29 @@ module.exports = {
 
   // plugin是用于扩展webpack的功能，所有插件写入plugins数组
   plugins: [
-    new ExtractTextPlugin("styles.css"),  // 分离css文件插件
+    new ExtractTextPlugin("css/styles.css"),  // 分离css文件插件
     new CleanWebpackPlugin(),       // 清理dist
     new HtmlWebpackPlugin({         // 打包输出HTML
       template: path.join(__dirname, '../index.html'), // html模板所在的文件路径
-      filename: 'index.html',       // 输出的html的文件名称
+      filename: 'index.html',           // 输出的html的文件名称
       title: 'webpack-note02',         // 生成html文件的标题
       hash: true
     }),
-    new webpack.NamedModulesPlugin(),         // 打印更新的模块路径 
-    new webpack.HotModuleReplacementPlugin()  // 热更新插件
-  ]
+    // new webpack.NamedModulesPlugin(),           // 打印更新的模块路径 
+    // new webpack.HotModuleReplacementPlugin(),   // 热更新插件
+    new webpack.HashedModuleIdsPlugin(),
+  ],
+  // 优化
+  optimization:{
+    // 代码分离
+    splitChunks:{
+      cacheGroups:{
+        commons:{
+          name: "commons",
+          chunks: "initial",
+          minChunks: 2
+        }
+      }
+    }
+  }
 }
