@@ -1,11 +1,15 @@
 import _ from 'lodash';
-import './../assets/css/app.scss';
+import './../assets/font/iconfont.css';   //  字体图标
+import './../assets/css/app.scss';        
 import './../assets/css/index.css';
-function componet() {
-  // let el = document.createElement('div');
-  // el.innerHTML = 'Hello webpack';
-  // return el;
-  return "<div>Hello webpack</div>"
+
+console.log('main.js');
+
+console.log('DefinePlugin 全局变量—IS_PRODUCTION', IS_PRODUCTION);
+console.log('DefinePlugin 全局变量—NODE_ENV', process.env.NODE_ENV);
+
+//ES6中的语法 异步处理
+async function sayHello(){ 
+	console.log('https://www.baidu.com');
 }
-console.log(componet(), '1122')
-document.body.appendChild(componet());
+sayHello();

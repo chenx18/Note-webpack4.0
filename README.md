@@ -1,3 +1,6 @@
+[webpack](https://webpack.docschina.org/guides/)  
+[webpack 分类](https://waliblog.com/category/webpack/)   
+
 ## 安装 webpack webpack-cli
   - npm install webpack webpack-cli --save-dev
   - npx webpck    零配置打包
@@ -18,21 +21,36 @@
   - npm install --save-dev webpack-dev-server  
   - npx webpack-dev-server 则可直接运行项目  
   - 使用NPM 脚步配置则可以使用 npm run dev 运行  
-  - webpck.config 中配置 devServer，devServer会在内存中创建类似的dist目录，在由浏览器打开进行预览  
+  - webpck.config 中配置 devServer，devServer会在内存中创建类似的dist目录，在由浏览器打开进行预览 
+  - 使用devServer的好处   
+      - 自动打开浏览器页面
+      - 调试接口
+      - 实时刷新
+      - 热更新
+      - 使用代理
+      - 局域网访问 
 
   ```js
     // web服务
     devServer: {
-      open: true,           // 自动打开浏览器
+      open: true,           // 启动时默认打开浏览器
       port: 3000,           // 指定启动运行端口
-      contentBase: "./dist",// 指定托管目录
+      contentBase: path.join(__dirname, 'dist'),// 指定托管目录
       hot: true,            // 启动热更新
+      proxy:{         // 代理
+      	'/':{
+      		target:'http://www.waliblog.com'
+      	},
+      	'/upload':{
+      		target:'http://www.waliblog.com'
+      	}
+      }
     }
   ```
 
 
 ## HtmlWebpackPlugin  （管理输出）
-  - HtmlWebpackPlugin 会默认生成 index.html 文件
+  - HtmlWebpackPlugin 会在打包结束后，自动生成一个html文件，并把打包生成的js自动引入到这个html文件中
   - npm install --save-dev html-webpack-plugin
  
 ## clean-webpack-plugin
@@ -41,23 +59,48 @@
 
 ## loader 
   > webpack 最出色的功能之一就是，除了 JavaScript，还可以通过 loader 引入任何其他类型的文件    
+  > oader 让 webpack 能够去处理其他类型的文件，并将它们转换为有效 模块，以供应用程序使用，以及被添加到依赖图中。
   
-  1. 加载 CSS ( style-loader css-loader )  
+  1. loader 有两个属性： 
+    - test 属性，用于标识出应该被对应的 loader 进行转换的某个或某些文件  
+    - use 属性，表示进行转换时，应该使用哪个 loader  
+
+  2. loader执行顺序:  
+
+  ```js
+   // rules执行顺序由右往左，由下往上。所以会先执行sass-loader -> css-loader -> style-loader
+    rules:[
+      {
+        test:/\.css$/,
+        use:[
+          'style-loader',
+          'css-loader',
+          'sass-loader'
+        ]
+      }
+    ]
+  ```  
+
+  3. 加载 CSS ( style-loader css-loader )  
     - npm install --save-dev style-loader css-loader
 
-  2. 加载 scss ( sass-loader node-sass )   
+  4. 加载 scss ( sass-loader node-sass )   
     - npm install --save-dev sass-loader node-sass 
 
-  3. 加载 less  ( less less-loader )   
+  5. 加载 less  ( less less-loader )   
     - npm install --save-dev less less-loader
 
-  2. 加载图片 ( file-loader   )   
-    - npm install --save-dev file-loader
+  6. 加载图片 ( file-loader / html-loader  )   
+    - npm install --save-dev file-loader html-loader
 
-  3. 加载字体 ( file-loader   ) 
+  7. 加载字体 ( file-loader   ) 
+
+  8. 添加厂商前缀和postCss
+    - 不管是写css,sass,less,postCss样式，在css3新特性下，我们是要添加浏览器厂商前缀的
+    - 如果没有浏览器厂商前缀，同一套样式不同浏览器展现的样式是不同的
 
 
-##  ExtractTextPlugin（分离css文件）
+## ExtractTextPlugin（分离css文件）
   - 它会将所有的入口 chunk(entry chunks)中引用的 *.css，移动到独立分离的 CSS 文件
   - 因此，你的样式将不再内嵌到 JS bundle 中，而是会放到一个单独的 CSS 文件（即 styles.css）当中。  
   - 如果你的样式文件大小较大，这会做更快提前加载，因为 CSS bundle 会跟 JS bundle 并行加载。
@@ -86,8 +129,10 @@
     const webpack = require('webpack'); // 引入依赖
 
     devServer: {
-      contentBase: "./dist",   // 指定托管目录
-      hot: true,               // 启动热更新 第一步
+      contentBase: path.join(__dirname, 'dist'),   // 指定托管目录
+      inline:true, //实时更新
+      hot:true,    //热替换
+      hotOnly:true,
     },
 
     plugins: [
@@ -97,7 +142,7 @@
     ]
   ```
 
-## 生产环境构建   
+## 环境构建   
   1. 目录结构   
 
   ```js
@@ -180,12 +225,12 @@
 
   1. 输出文件的文件名  
     - 通过使用 output.filename 进行文件名替换，可以确保浏览器获取到修改后的文件；  
-    - 使用 [chunkhash] 替换，在文件名中包含一个 chunk 相关(chunk-specific)的哈希。  
-    - 注意： 生产环境无需配置热更新 会影响使用 [chunkhash]
+    - 使用 [contenthash] 替换，根据资源内容创建出唯一 hash。  
+    - 资源内容发生变化时，[contenthash] 也会发生变化
 
     ```js
       output: {
-        filename: '[name].[chunkhash].js',
+        filename: '[name].[contenthash].js',
         path: path.join(__dirname,'../dist')
       }
     ```
@@ -193,6 +238,59 @@
   2. 模块标识符
 
 
+
+## 处理ES6语法( Babel )
+
+```js
+  // 安装
+  // babel-loader的作用正是实现对使用了ES2015+语法的.js文件进行处理
+  // babel-core的作用在于提供一系列api,当webpack使用babel-loader处理文件时，babel-loader实际上调用了babel-core的api
+  // babel-preset-env的作用是告诉babel使用哪种转码规则进行文件处理
+  npm install -D babel-loader @babel/core @babel/preset-env webpack
+
+  // 配置
+    // 1. webpack.config.js中增加匹配规则
+    module.exports = {
+      module:{  
+        rules:[   
+          {
+            test:/\.js$/,   //匹配JS文件  
+            use:'babel-loader',
+            exclude:/node_modules/   //排除node_modules目录
+          }
+        ]
+      }
+    }
+    //2. Babel配置文件
+    // 在项目根路径下创建名为 .babelrc 的Babel配置文件（规范的JSON格式，无注释、字符串必须双引号等等），配置规则。plugins插件；presets预设、语法。
+    {
+      "presets": ["@babel/env"]
+    }
+    //或者 在package.json中配置。
+    "babel":{
+      "presets": ["@babel/env"]
+    }
+
+```
+
+## 环境变量
+
+## MiniCssExtractPlugin
+
+## DefinePlugin
+  - 允许创建一个在编译时可以配置的全局常量
+
+  ```js
+    plugins: [
+      new webpack.DefinePlugin({
+        'DEV': JSON.stringify('production'),
+      })
+    ],
+    new webpack.DefinePlugin({
+      IS_PRODUCTION: JSON.stringify(true),
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+    });
+  ```
 
 ## 待
   - 转化es6
@@ -203,7 +301,7 @@
   - 打包文件分类
   - 打包多页应用
   - 跨域配置
-  - resolve属性配置
+  - resolve属性配置 
   - 定义环境变量
   - 区分不同环境
   - noParse
