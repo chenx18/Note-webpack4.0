@@ -4,7 +4,11 @@ const webpack = require('webpack');
 
 const devConfig = {
   mode: 'development',  
-  devtool: 'inline-source-map',
+  // 出口
+  output:{
+    filename: '[name].js',      //输出文件的文件名
+  },
+  devtool: 'cheap-eval-source-map',
   plugins: [
     new webpack.DefinePlugin({
       IS_PRODUCTION: JSON.stringify(false)
@@ -26,10 +30,7 @@ const devConfig = {
     //   }
     // }
   },
-  // 出口
-  output:{
-    filename: '[name].js',
-  },
+ 
 }
 
 module.exports = devConfig;

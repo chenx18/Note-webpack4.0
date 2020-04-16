@@ -2,35 +2,39 @@ const path  = require('path');
 const webpack = require('webpack');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const ExtractTextPlugin = require("extract-text-webpack-plugin");  //css样式提取
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");   //css样式提取
 const merge = require('webpack-merge');
 
 const devConfig = require('./dev.env.js');
 const proConfig = require('./prod.env.js');
+const devMode = process.env.NODE_ENV !== 'production';  // 环境变量
 
-console.log(path.join(__dirname,'../src/main.js'))
+// console.log(path.join(__dirname,'../src/main.js'))
+// console.log('devMode', process.env.NODE_ENV)   // 读取cross-env 配置的环境变量 (npm script)
 
 const commonConfig  = {
 
   // 入口 （对象 或者 字符）
   entry: {
     index: path.join(__dirname,'../src/main.js'),
-    another: path.join(__dirname,'../src/untils/another-module.js'),
+    another: path.join(__dirname,'../src/untils/another.js'),
+    login: path.join(__dirname,'../src/login/login.js')
   }, 
   //出口
   output: { 
     path: path.join(__dirname, '../dist')
   },
+  
   // 配置所有第三方 loader 模块
   module:{
     rules:[
       { // 处理css文件，分离css文件
         test:/\.css$/,
-        use: ExtractTextPlugin.extract({
-          fallback: "style-loader",
-          use: "css-loader"
-        })
+        use: [
+          { loader: MiniCssExtractPlugin.loader },
+          'css-loader'
+        ]
       },   
       { // 处理scss文件的loader
         test:/\.scss$/,
@@ -77,31 +81,64 @@ const commonConfig  = {
           }
         }
       }
-
     ]
   },
 
   // plugin是用于扩展webpack的功能，所有插件写入plugins数组
   plugins: [
-    new CleanWebpackPlugin(),       // 清理dist
-    new HtmlWebpackPlugin({         // 打包输出HTML
+
+    // 打包生成对应的html文件
+    new HtmlWebpackPlugin({  
+      filename: 'index.html',           // 打包生成的文件地址及文件名       
       template: path.join(__dirname, '../index.html'), // html模板所在的文件路径
-      filename: 'index.html',           // 输出的html的文件名称
-      title: 'webpack-note02',         // 生成html文件的标题
+      minify:{    //对html文件进行压缩
+        removeAttributeQuotes:true,  //去掉属性的双引号
+        removeComments: true,        //去掉注释
+        collapseWhitespace: true,    //去掉空白
+      },
+      title: 'webpack-note02',          // 设置该页面的title标题标签
+      chunks:['index','another'],       // 每个html只引入对应的js和css
+      // inject:'body',                    // 所有js资源插入到head标签中
+      hash: true                        //避免缓存js
+    }),
+
+    // 打包生成对应的html文件
+    new HtmlWebpackPlugin({ 
+      template: path.join(__dirname, '../src/login/login.html'), // html模板所在的文件路径
+      filename: 'login/login.html',           // 打包生成的文件地址及文件名
+      minify:{    //对html文件进行压缩
+        removeAttributeQuotes:true,  //去掉属性的双引号
+        removeComments: true,        //去掉注释
+        collapseWhitespace: true,    //去掉空白
+      },
+      title: 'loginoing',               // 设置该页面的title标题标签
+      chunks:['login'],                 // 配置这个html 包含 入口模块
+      // inject:'body',                    // 所有js资源插入到head标签中
       hash: true
     }),
-    new ExtractTextPlugin("assets/css/styles.css"),  // 分离css文件插件
-    new webpack.HashedModuleIdsPlugin(),
+
+    // 分离css文件插件
+    new MiniCssExtractPlugin({         
+      filename: devMode?"assets/css/[name].css":"assets/css/[name].[hash:7].css",
+      chunkFilename: devMode?"assets/css/[id].css":"assets/css/[id].[hash:7].css"
+    }), 
+    
   ],
   // 优化
   optimization:{
     // 代码分离
     splitChunks:{
       cacheGroups:{
-        commons:{
-          name: "commons",
-          chunks: "initial",
-          minChunks: 2
+        vendors: {   // 分组名称
+          test: /[\\/]node_modules[\\/]/,
+          name: 'commons',   // 拆分的名称
+          chunks: 'all',    // 设置代码分割类型
+          priority: -10     //有限权，当一个模块都符合cacheGroups分组条件，将按照优先权进行分组，priority值越大，优先权越高
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true
         }
       }
     }
@@ -109,7 +146,6 @@ const commonConfig  = {
 }
 
 module.exports = (env) => {
-  console.log(env)
   if (env && env.NODE_ENV==='production'){
     return merge(commonConfig, proConfig)
   } else {
